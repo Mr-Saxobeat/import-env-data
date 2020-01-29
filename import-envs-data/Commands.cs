@@ -105,12 +105,11 @@ namespace AcadPlugin
                                 //{
                                     Xrecord xRec = new Xrecord();
                                     ResultBuffer rb = new ResultBuffer();
-                                    rb.Add(new TypedValue((int)DxfCode.ExtendedDataReal, Convert.ToDouble(sBlkId)));
                                     rb.Add(new TypedValue((int)DxfCode.ExtendedDataHandle, eBlk.Handle));
 
                                     xRec.Data = rb;
 
-                                    dbExt.SetAt("Ids", xRec);
+                                    dbExt.SetAt(sBlkId, xRec);
                                     tr.AddNewlyCreatedDBObject(xRec, true);
                                 //}
                             }
@@ -149,8 +148,8 @@ namespace AcadPlugin
                 DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
                 ObjectId extId = dbModelSpace.ExtensionDictionary;
                 DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
-                ObjectId testIds = dbExt.GetAt("Ids");
-                Xrecord xRec = (Xrecord)tr.GetObject(testIds, OpenMode.ForRead);
+                
+                //Xrecord xRec = (Xrecord)tr.GetObject(testIds, OpenMode.ForRead);
                 
 
                 while (!fileData.EndOfStream)
@@ -160,6 +159,20 @@ namespace AcadPlugin
                     sIds = new String[2];
                     sIds[0] = sLine[0];
                     sIds[1] = sLine[1];
+
+                    // Pega o handle a partir do id dado 
+                    ObjectId idId = dbExt.GetAt(sIds[0]);
+                    Xrecord xRec = (Xrecord)tr.GetObject(idId, OpenMode.ForRead);
+                    ResultBuffer rb = xRec.Data;
+                    TypedValue[] tp = rb.AsArray();
+                    string hand = tp[0].Value as string;
+
+                    long ln = Convert.ToInt64(hand, 16);
+                    Handle hn = new Handle(ln);
+                    ObjectId id = db.GetObjectId(false, hn, 0);
+
+                    // Erro aqui. Parece que eu registrei o id do block reference e não do record.
+                    BlockTableRecord blk = (BlockTableRecord)tr.GetObject(id, OpenMode.ForRead);
 
                     //var oLine = new Line(new Point3d(Convert.ToDouble(sCondCoord[0]), Convert.ToDouble(sCondCoord[1]), 0));
                 }
