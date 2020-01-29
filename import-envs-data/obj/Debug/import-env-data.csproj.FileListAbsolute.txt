@@ -1,0 +1,6 @@
+C:\Users\weiglas.ribeiro.LANGAMER\Documents\GitHub\import-env-data\import-envs-data\bin\Debug\start.scr
+C:\Users\weiglas.ribeiro.LANGAMER\Documents\GitHub\import-env-data\import-envs-data\bin\Debug\import-envs-data.dll
+C:\Users\weiglas.ribeiro.LANGAMER\Documents\GitHub\import-env-data\import-envs-data\bin\Debug\import-envs-data.pdb
+C:\Users\weiglas.ribeiro.LANGAMER\Documents\GitHub\import-env-data\import-envs-data\obj\Debug\import-env-data.csprojAssemblyReference.cache
+C:\Users\weiglas.ribeiro.LANGAMER\Documents\GitHub\import-env-data\import-envs-data\obj\Debug\import-envs-data.dll
+C:\Users\weiglas.ribeiro.LANGAMER\Documents\GitHub\import-env-data\import-envs-data\obj\Debug\import-envs-data.pdb

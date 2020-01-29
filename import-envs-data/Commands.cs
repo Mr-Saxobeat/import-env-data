@@ -16,21 +16,30 @@ namespace AcadPlugin
     public class Commands
     {
         [CommandMethod("IMPORTENVDATA")]
-        public void Test()
+        public void ImportEnvData()
         {
 
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            var fileData = new StreamReader("C:/Users/weiglas.ribeiro.LANGAMER/Desktop/teste.csv");
-        
+            // Local do arquivo de dados 
+            // ***************************************************************************************************************************
+            var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/test-import-env-data.csv");
+            // ***************************************************************************************************************************
+
+
+            // Local dos blocos a serem carregados
+            // ***************************************************************************************************************************
             String blkPath = "Z:/Lisp/BLOCOS";
-            String[] line;
-            String blkName;
-            String[] blkCoord;
+            // ***************************************************************************************************************************
+
+            string[] sFileLine;
+            string sBlkId;
+            string sBlkName;
+            string[] sBlkCoord;
             Point3d ptBlkOrigin;
-            String blkRot;
+            string sBlkRot;
 
             using (var tr = db.TransactionManager.StartTransaction())
             {
@@ -40,23 +49,26 @@ namespace AcadPlugin
 
                 using (var acBlkTblRec = new BlockTableRecord())
                 {
+                    DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
+
                     while (!fileData.EndOfStream)
                     {
-                        line = fileData.ReadLine().Split(';');
+                        sFileLine = fileData.ReadLine().Split(';');
 
-                        blkName = line[0];
-                        blkCoord = line[1].Split(',');
-                        ptBlkOrigin = new Point3d(Convert.ToDouble(blkCoord[0]), Convert.ToDouble(blkCoord[1]), 0);
-                        blkRot = line[2];
+                        sBlkId = sFileLine[0];
+                        sBlkName = sFileLine[1];
+                        sBlkCoord = sFileLine[2].Split(',');
+                        ptBlkOrigin = new Point3d(Convert.ToDouble(sBlkCoord[0]), Convert.ToDouble(sBlkCoord[1]), 0);
+                        sBlkRot = sFileLine[3];
 
-                        if (!acBlkTbl.Has(blkName))
+                        if (!acBlkTbl.Has(sBlkName))
                         {
                             try
                             {
                                 using (var blkDb = new Database(false, true))
                                 {
-                                    blkDb.ReadDwgFile(blkPath + "/" + blkName + ".dwg", FileOpenMode.OpenForReadAndAllShare, true, "");
-                                    db.Insert(blkName, blkDb, true);
+                                    blkDb.ReadDwgFile(blkPath + "/" + sBlkName + ".dwg", FileOpenMode.OpenForReadAndAllShare, true, "");
+                                    ObjectId blkId = db.Insert(sBlkName, blkDb, true);
                                 }
                             }
                             catch
@@ -65,7 +77,7 @@ namespace AcadPlugin
                             }
                         }
                        
-                        blkRecId = acBlkTbl[blkName];    
+                        blkRecId = acBlkTbl[sBlkName];    
 
                         if (blkRecId != ObjectId.Null)
                         {
@@ -76,8 +88,35 @@ namespace AcadPlugin
 
                                 acCurSpaceBlkTblRec.AppendEntity(acBlkRef);
                                 tr.AddNewlyCreatedDBObject(acBlkRef, true);
+
+                                Entity eBlk = (Entity)tr.GetObject(acBlkRef.Id, OpenMode.ForRead);
+
+                                ObjectId extId = dbModelSpace.ExtensionDictionary;
+
+                                if (extId == ObjectId.Null)
+                                {
+                                    dbModelSpace.CreateExtensionDictionary();
+                                    extId = dbModelSpace.ExtensionDictionary;
+                                }
+
+                                DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForWrite);
+
+                                //if (!dbExt.Contains("Ids"))
+                                //{
+                                    Xrecord xRec = new Xrecord();
+                                    ResultBuffer rb = new ResultBuffer();
+                                    rb.Add(new TypedValue((int)DxfCode.ExtendedDataReal, Convert.ToDouble(sBlkId)));
+                                    rb.Add(new TypedValue((int)DxfCode.ExtendedDataHandle, eBlk.Handle));
+
+                                    xRec.Data = rb;
+
+                                    dbExt.SetAt("Ids", xRec);
+                                    tr.AddNewlyCreatedDBObject(xRec, true);
+                                //}
                             }
                         }
+
+                        
 
 
                     }
@@ -86,6 +125,44 @@ namespace AcadPlugin
 
                 fileData.Close();
                 tr.Commit();
+            }
+        }
+
+        [CommandMethod("LIGAELETRODUTOS")]
+        public void ConnectConduits()
+        {
+            Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            // Local do arquivo de dados 
+            // ***************************************************************************************************************************
+            var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/test-liga-eletro.csv");
+            // ***************************************************************************************************************************
+
+            string[] sLine;
+            //String[] sCondCoord;
+            string[] sIds;
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
+                ObjectId extId = dbModelSpace.ExtensionDictionary;
+                DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
+                ObjectId testIds = dbExt.GetAt("Ids");
+                Xrecord xRec = (Xrecord)tr.GetObject(testIds, OpenMode.ForRead);
+                
+
+                while (!fileData.EndOfStream)
+                {
+                    sLine = fileData.ReadLine().Split(';');
+
+                    sIds = new String[2];
+                    sIds[0] = sLine[0];
+                    sIds[1] = sLine[1];
+
+                    //var oLine = new Line(new Point3d(Convert.ToDouble(sCondCoord[0]), Convert.ToDouble(sCondCoord[1]), 0));
+                }
             }
         }
     }
