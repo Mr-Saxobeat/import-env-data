@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "import-envs-data", "import-envs-data.csproj", "{B12F637D-6431-420F-9CD5-A82725DA51A0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "import-env-data", "import-env-data.csproj", "{B12F637D-6431-420F-9CD5-A82725DA51A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
