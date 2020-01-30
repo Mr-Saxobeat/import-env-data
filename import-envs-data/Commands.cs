@@ -148,9 +148,7 @@ namespace AcadPlugin
             // ***************************************************************************************************************************
 
             string[] sLine;
-            //String[] sCondCoord;
-            string[] sIds;
-
+            
             using (var tr = db.TransactionManager.StartTransaction())
             {
                 BlockTable BlkTbl = tr.GetObject(db.BlockTableId, OpenMode.ForWrite) as BlockTable;
@@ -158,32 +156,44 @@ namespace AcadPlugin
                 DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
                 ObjectId extId = dbModelSpace.ExtensionDictionary;
                 DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
-                BlockReference blk1;
-                BlockReference blk2;
-
-                //Xrecord xRec = (Xrecord)tr.GetObject(testIds, OpenMode.ForRead);
-
+                Point2d ptVert;
+                int indexVert;
 
                 while (!fileData.EndOfStream)
                 {
                     sLine = fileData.ReadLine().Split(';');
+                    indexVert = 0;
 
-                    sIds = new String[2];
-                    sIds[0] = sLine[0];
-                    sIds[1] = sLine[1];
+                    using(Polyline oPLine = new Polyline())
+                    {
+                        foreach(string address in sLine)
+                        {
+                            if(address != "")
+                            {
+                                if (address.Contains(','))
+                                {
+                                    string[] coords = address.Split(',');
+                                    ptVert = new Point2d(Convert.ToDouble(coords[0]), Convert.ToDouble(coords[1]));
+                                }
+                                else
+                                {
+                                    ptVert = GetPtFromHandleBlock(db, dbExt, address);
+                                }
 
-                    blk1 = GetBlockFromHandle(db, dbExt, sIds[0]);
-                    blk2 = GetBlockFromHandle(db, dbExt, sIds[1]);
-
-                    var oLine = new Line(blk1.Position, blk2.Position);
-                    BlkTblRec.AppendEntity(oLine);
-                    tr.AddNewlyCreatedDBObject(oLine, true);
+                                //oPLine.SetPointAt(indexPoint, ptVert);
+                                oPLine.AddVertexAt(indexVert, ptVert, 0, 0, 0);
+                                indexVert++;
+                            }
+                        }
+                        BlkTblRec.AppendEntity(oPLine);
+                        tr.AddNewlyCreatedDBObject(oPLine, true);
+                    }
                 }
                 tr.Commit();
             }
         }
 
-        public BlockReference GetBlockFromHandle(Database db, DBDictionary dbExt, string idHn)
+        public Point2d GetPtFromHandleBlock(Database db, DBDictionary dbExt, string idHn)
         {
             BlockReference blk;
 
@@ -200,12 +210,11 @@ namespace AcadPlugin
                 Handle hn = new Handle(ln);
                 ObjectId id = db.GetObjectId(false, hn, 0);
 
-                // Erro aqui. Parece que eu registrei o id do block reference e não do record.
                 blk = (BlockReference)tr.GetObject(id, OpenMode.ForRead);
 
             }
 
-            return blk;
+            return new Point2d(blk.Position.X, blk.Position.Y);
         }
     }
 }
