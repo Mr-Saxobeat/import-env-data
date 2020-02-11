@@ -15,7 +15,7 @@ namespace AcadPlugin
 {
     public class Commands
     {
-        [CommandMethod("IMPORTENVDATA")]
+        [CommandMethod("IDA")]
         public void ImportEnvData()
         {
 
@@ -24,8 +24,8 @@ namespace AcadPlugin
             Editor ed = doc.Editor;
 
             // Local do arquivo de dados 
-            // ***************************************************************************************************************************
-            var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/test-import-env-data.csv");
+            // ************************************************************************s***************************************************
+            var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/ida.csv");
             // ***************************************************************************************************************************
 
 
@@ -51,20 +51,16 @@ namespace AcadPlugin
                 {
                     DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
 
-                    //**********************************************************************************************************************************************
-                    FileStream fileCsv = new FileStream("C:/Users/weiglas.ribeiro.LANGAMER/Desktop/www.csv", FileMode.Create);
-                    StreamWriter strWrt = new StreamWriter(fileCsv, Encoding.UTF8);
-                    //**********************************************************************************************************************************************
-
                     while (!fileData.EndOfStream)
                     {
                         sFileLine = fileData.ReadLine().Split(';');
 
-                        sBlkId = sFileLine[0];
-                        sBlkName = sFileLine[1];
-                        sBlkCoord = sFileLine[2].Split(',');
-                        ptBlkOrigin = new Point3d(Convert.ToDouble(sBlkCoord[0]), Convert.ToDouble(sBlkCoord[1]), 0);
-                        sBlkRot = sFileLine[3];
+                        sBlkName = sFileLine[0];
+                        sBlkId = sFileLine[1];
+                        ptBlkOrigin = new Point3d(Convert.ToDouble(sFileLine[2]), Convert.ToDouble(sFileLine[3]), 0);
+                        //sBlkCoord = sFileLine[2].Split(',');
+                        //ptBlkOrigin = new Point3d(Convert.ToDouble(sBlkCoord[0]), Convert.ToDouble(sBlkCoord[1]), 0);
+                        sBlkRot = sFileLine[4];
 
                         if (!acBlkTbl.Has(sBlkName))
                         {
@@ -112,10 +108,7 @@ namespace AcadPlugin
                                     ResultBuffer rb = new ResultBuffer();
                                     rb.Add(new TypedValue((int)DxfCode.ExtendedDataHandle, eBlk.Handle));
 
-                                //****************************************************************************************************
-                                strWrt.WriteLine(eBlk.Handle.ToString());
-                                //****************************************************************************************************
-                                xRec.Data = rb;
+                                    xRec.Data = rb;
 
                                     dbExt.SetAt(sBlkId, xRec);
                                     tr.AddNewlyCreatedDBObject(xRec, true);
@@ -124,10 +117,6 @@ namespace AcadPlugin
                         }
 
                     }
-                        //****************************************************************************************************
-                        strWrt.Close();
-                        //****************************************************************************************************
-
                 }
                 
                 fileData.Close();
@@ -135,7 +124,7 @@ namespace AcadPlugin
             }
         }
 
-        [CommandMethod("LIGAELETRODUTOS")]
+        [CommandMethod("LET")]
         public void ConnectConduits()
         {
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
@@ -144,7 +133,7 @@ namespace AcadPlugin
 
             // Local do arquivo de dados 
             // ***************************************************************************************************************************
-            var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/test-liga-eletro.csv");
+            var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/let.csv");
             // ***************************************************************************************************************************
 
             string[] sLine;
