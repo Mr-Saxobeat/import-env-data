@@ -15,22 +15,31 @@ namespace AcadPlugin
 {
     public class Commands
     {
-        [CommandMethod("IMPORTENVDATA")]
-        public void Test()
+        [CommandMethod("IDA")]
+        public void ImportEnvData()
         {
 
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            var fileData = new StreamReader("C:/Users/weiglas.ribeiro.LANGAMER/Desktop/teste.csv");
-        
+            // Local do arquivo de dados 
+            // ************************************************************************s***************************************************
+            var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/ida.csv");
+            // ***************************************************************************************************************************
+
+
+            // Local dos blocos a serem carregados
+            // ***************************************************************************************************************************
             String blkPath = "Z:/Lisp/BLOCOS";
-            String[] line;
-            String blkName;
-            String[] blkCoord;
+            // ***************************************************************************************************************************
+
+            string[] sFileLine;
+            string sBlkId;
+            string sBlkName;
+            string[] sBlkCoord;
             Point3d ptBlkOrigin;
-            String blkRot;
+            string sBlkRot;
 
             using (var tr = db.TransactionManager.StartTransaction())
             {
@@ -40,23 +49,27 @@ namespace AcadPlugin
 
                 using (var acBlkTblRec = new BlockTableRecord())
                 {
+                    DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
+
                     while (!fileData.EndOfStream)
                     {
-                        line = fileData.ReadLine().Split(';');
+                        sFileLine = fileData.ReadLine().Split(';');
 
-                        blkName = line[0];
-                        blkCoord = line[1].Split(',');
-                        ptBlkOrigin = new Point3d(Convert.ToDouble(blkCoord[0]), Convert.ToDouble(blkCoord[1]), 0);
-                        blkRot = line[2];
+                        sBlkName = sFileLine[0];
+                        sBlkId = sFileLine[1];
+                        ptBlkOrigin = new Point3d(Convert.ToDouble(sFileLine[2]), Convert.ToDouble(sFileLine[3]), 0);
+                        //sBlkCoord = sFileLine[2].Split(',');
+                        //ptBlkOrigin = new Point3d(Convert.ToDouble(sBlkCoord[0]), Convert.ToDouble(sBlkCoord[1]), 0);
+                        sBlkRot = sFileLine[4];
 
-                        if (!acBlkTbl.Has(blkName))
+                        if (!acBlkTbl.Has(sBlkName))
                         {
                             try
                             {
                                 using (var blkDb = new Database(false, true))
                                 {
-                                    blkDb.ReadDwgFile(blkPath + "/" + blkName + ".dwg", FileOpenMode.OpenForReadAndAllShare, true, "");
-                                    db.Insert(blkName, blkDb, true);
+                                    blkDb.ReadDwgFile(blkPath + "/" + sBlkName + ".dwg", FileOpenMode.OpenForReadAndAllShare, true, "");
+                                    ObjectId blkId = db.Insert(sBlkName, blkDb, true);
                                 }
                             }
                             catch
@@ -65,7 +78,7 @@ namespace AcadPlugin
                             }
                         }
                        
-                        blkRecId = acBlkTbl[blkName];    
+                        blkRecId = acBlkTbl[sBlkName];    
 
                         if (blkRecId != ObjectId.Null)
                         {
@@ -76,17 +89,121 @@ namespace AcadPlugin
 
                                 acCurSpaceBlkTblRec.AppendEntity(acBlkRef);
                                 tr.AddNewlyCreatedDBObject(acBlkRef, true);
+
+                                Entity eBlk = (Entity)tr.GetObject(acBlkRef.Id, OpenMode.ForRead);
+
+                                ObjectId extId = dbModelSpace.ExtensionDictionary;
+
+                                if (extId == ObjectId.Null)
+                                {
+                                    dbModelSpace.CreateExtensionDictionary();
+                                    extId = dbModelSpace.ExtensionDictionary;
+                                }
+
+                                DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForWrite);
+
+                                //if (!dbExt.Contains("Ids"))
+                                //{
+                                    Xrecord xRec = new Xrecord();
+                                    ResultBuffer rb = new ResultBuffer();
+                                    rb.Add(new TypedValue((int)DxfCode.ExtendedDataHandle, eBlk.Handle));
+
+                                    xRec.Data = rb;
+
+                                    dbExt.SetAt(sBlkId, xRec);
+                                    tr.AddNewlyCreatedDBObject(xRec, true);
+                                //}
                             }
                         }
 
-
                     }
-
                 }
-
+                
                 fileData.Close();
                 tr.Commit();
             }
+        }
+
+        [CommandMethod("LET")]
+        public void ConnectConduits()
+        {
+            Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            // Local do arquivo de dados 
+            // ***************************************************************************************************************************
+            var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/let.csv");
+            // ***************************************************************************************************************************
+
+            string[] sLine;
+            
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable BlkTbl = tr.GetObject(db.BlockTableId, OpenMode.ForWrite) as BlockTable;
+                BlockTableRecord BlkTblRec = tr.GetObject(BlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
+                ObjectId extId = dbModelSpace.ExtensionDictionary;
+                DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
+                Point2d ptVert;
+                int indexVert;
+
+                while (!fileData.EndOfStream)
+                {
+                    sLine = fileData.ReadLine().Split(';');
+                    indexVert = 0;
+
+                    using(Polyline oPLine = new Polyline())
+                    {
+                        foreach(string address in sLine)
+                        {
+                            if(address != "")
+                            {
+                                if (address.Contains(','))
+                                {
+                                    string[] coords = address.Split(',');
+                                    ptVert = new Point2d(Convert.ToDouble(coords[0]), Convert.ToDouble(coords[1]));
+                                }
+                                else
+                                {
+                                    ptVert = GetPtFromHandleBlock(db, dbExt, address);
+                                }
+
+                                //oPLine.SetPointAt(indexPoint, ptVert);
+                                oPLine.AddVertexAt(indexVert, ptVert, 0, 0, 0);
+                                indexVert++;
+                            }
+                        }
+                        BlkTblRec.AppendEntity(oPLine);
+                        tr.AddNewlyCreatedDBObject(oPLine, true);
+                    }
+                }
+                tr.Commit();
+            }
+        }
+
+        public Point2d GetPtFromHandleBlock(Database db, DBDictionary dbExt, string idHn)
+        {
+            BlockReference blk;
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                // Pega o handle a partir do id dado 
+                ObjectId idId = dbExt.GetAt(idHn);
+                Xrecord xRec = (Xrecord)tr.GetObject(idId, OpenMode.ForRead);
+                ResultBuffer rb = xRec.Data;
+                TypedValue[] tp = rb.AsArray();
+                string hand = tp[0].Value as string;
+
+                long ln = Convert.ToInt64(hand, 16);
+                Handle hn = new Handle(ln);
+                ObjectId id = db.GetObjectId(false, hn, 0);
+
+                blk = (BlockReference)tr.GetObject(id, OpenMode.ForRead);
+
+            }
+
+            return new Point2d(blk.Position.X, blk.Position.Y);
         }
     }
 }
