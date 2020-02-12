@@ -136,7 +136,9 @@ namespace AcadPlugin
 
             // Local do arquivo de dados 
             // ***************************************************************************************************************************
-            var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/let.csv");
+            string curDwgPath = Directory.GetCurrentDirectory();
+            //var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/let.csv");
+            var fileData = new StreamReader(curDwgPath + "\\let.csv");
             // ***************************************************************************************************************************
 
             string[] sLine;
@@ -183,6 +185,12 @@ namespace AcadPlugin
                 }
                 tr.Commit();
             }
+        }
+
+        [CommandMethod("TTT")]
+        public void ReadBlocksData()
+        {
+
         }
 
         public Point2d GetPtFromHandleBlock(Database db, DBDictionary dbExt, string idHn)
