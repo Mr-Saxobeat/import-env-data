@@ -25,13 +25,16 @@ namespace AcadPlugin
 
             // Local do arquivo de dados 
             // ************************************************************************s***************************************************
-            var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/ida.csv");
+            //var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/ida.csv");
+            string curDwgPath = Directory.GetCurrentDirectory();
+            var fileData = new StreamReader(curDwgPath + "\\ida.csv");
             // ***************************************************************************************************************************
 
 
             // Local dos blocos a serem carregados
             // ***************************************************************************************************************************
-            String blkPath = "Z:/Lisp/BLOCOS";
+            //String blkPath = "Z:/Lisp/BLOCOS";
+            String blkPath = curDwgPath;
             // ***************************************************************************************************************************
 
             string[] sFileLine;
