@@ -157,6 +157,7 @@ namespace AcadPlugin
                 DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
                 ObjectId extId = dbModelSpace.ExtensionDictionary;
                 DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
+                Point3d ptAux;
                 Point2d ptVert;
                 int indexVert;
 
@@ -167,18 +168,25 @@ namespace AcadPlugin
 
                     using(Polyline oPLine = new Polyline())
                     {
+                        // address pode ser um index ou um ponto
                         foreach(string address in sLine)
                         {
                             if(address != "")
                             {
+                                // Se tem vírgula é um ponto, onde suas coordenadas
+                                // são separadas por uma vírgula.
                                 if (address.Contains(','))
                                 {
                                     string[] coords = address.Split(',');
                                     ptVert = new Point2d(Convert.ToDouble(coords[0]), Convert.ToDouble(coords[1]));
                                 }
+                                // Se não tem vírgula, é um index, 
+                                // na qual é usado o método 'GetRefBlkFromIndex' 
+                                // para pegar o ponto do bloco.
                                 else
                                 {
-                                    ptVert = GetPtFromHandleBlock(db, dbExt, address);
+                                    ptAux = GetRefBlkFromIndex(db, dbExt, address).Position;
+                                    ptVert = new Point2d(ptAux.X, ptAux.Y);
                                 }
 
                                 //oPLine.SetPointAt(indexPoint, ptVert);
@@ -214,18 +222,25 @@ namespace AcadPlugin
 
                 foreach (DBDictionaryEntry dbEntry in dbExt)
                 {
-                    string indexBlock = dbEntry.Key;
-                    var teste = tr.GetObject(dbEntry.Value, OpenMode.ForRead);
-                    //BlockReference objBlk = tr.GetObject(dbEntry.Value, OpenMode.ForRead) as BlockReference;
+                    try
+                    {
+                        string indexBlock = dbEntry.Key;
+                        BlockReference blkRef = GetRefBlkFromIndex(db, dbExt, indexBlock);
 
-                    //string blkName = objBlk.Name;
-                    //double blkRot = objBlk.Rotation;
-                    //double blkX = objBlk.Position.X;
-                    //double blkY = objBlk.Position.Y;
+                        string blkName = blkRef.Name;
+                        double blkRot = blkRef.Rotation;
+                        string blkX = blkRef.Position.X.ToString("n2");
+                        string blkY = blkRef.Position.Y.ToString("n2");
 
-                    // Falta Pegar o valor do atributo (que ainda nem foi setado) ************************************************************
+                        // Falta Pegar o valor do atributo (que ainda nem foi setado) ************************************************************
 
-                    //fileOut.WriteLine(indexBlock + ";" + blkName + ";" + blkRot + ";" + blkX + ";" + blkY + ";");
+                        fileOut.WriteLine(indexBlock + ";" + blkName + ";" + blkRot + ";" + blkX + ";" + blkY + ";");
+                    }
+                    catch (System.Exception)
+                    {
+
+                    }
+                    
                 }
 
                 fileOut.Close();
@@ -233,7 +248,7 @@ namespace AcadPlugin
             }
         }
 
-        public Point2d GetPtFromHandleBlock(Database db, DBDictionary dbExt, string idHn)
+        public BlockReference GetRefBlkFromIndex(Database db, DBDictionary dbExt, string idHn)
         {
             BlockReference blk;
 
@@ -254,7 +269,9 @@ namespace AcadPlugin
 
             }
 
-            return new Point2d(blk.Position.X, blk.Position.Y);
+            return blk;
         }
+
+
     }
 }
