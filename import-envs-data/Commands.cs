@@ -53,17 +53,20 @@ namespace AcadPlugin
                 using (var acBlkTblRec = new BlockTableRecord())
                 {
                     DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
-
+                    int contId = 0;
                     while (!fileData.EndOfStream)
                     {
                         sFileLine = fileData.ReadLine().Split(';');
 
+                        // Atribui os parêmtros de cada bloco que será inserido
+                        // baseado no arquivo IDA.
+                        sBlkId = Convert.ToString(contId);
                         sBlkName = sFileLine[0];
-                        sBlkId = sFileLine[1];
+                        sBlkRot = sFileLine[1];
                         ptBlkOrigin = new Point3d(Convert.ToDouble(sFileLine[2]), Convert.ToDouble(sFileLine[3]), 0);
-                        //sBlkCoord = sFileLine[2].Split(',');
-                        //ptBlkOrigin = new Point3d(Convert.ToDouble(sBlkCoord[0]), Convert.ToDouble(sBlkCoord[1]), 0);
-                        sBlkRot = sFileLine[4];
+
+                        // ******************************************************************************************************************************************
+                        // Falta pegar o atributo (que é o último argumento dado no arquivo que Leo passou
 
                         if (!acBlkTbl.Has(sBlkName))
                         {
@@ -72,7 +75,10 @@ namespace AcadPlugin
                                 using (var blkDb = new Database(false, true))
                                 {
                                     blkDb.ReadDwgFile(blkPath + "/" + sBlkName + ".dwg", FileOpenMode.OpenForReadAndAllShare, true, "");
+
+                                    // Falta configurar a rotação do bloco *********************************************************************
                                     ObjectId blkId = db.Insert(sBlkName, blkDb, true);
+
                                 }
                             }
                             catch
@@ -119,6 +125,7 @@ namespace AcadPlugin
                             }
                         }
 
+                        contId++;
                     }
                 }
                 
@@ -185,12 +192,6 @@ namespace AcadPlugin
                 }
                 tr.Commit();
             }
-        }
-
-        [CommandMethod("TTT")]
-        public void ReadBlocksData()
-        {
-
         }
 
         public Point2d GetPtFromHandleBlock(Database db, DBDictionary dbExt, string idHn)
