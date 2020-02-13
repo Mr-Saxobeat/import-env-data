@@ -22,10 +22,13 @@ namespace AcadPlugin
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
+
+
             // Local do arquivo de dados 
             // ************************************************************************s***************************************************
             //var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/ida.csv");
-            string curDwgPath = Directory.GetCurrentDirectory();
+            //string curDwgPath = Directory.GetCurrentDirectory();
+            string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
             var fileData = new StreamReader(curDwgPath + "\\ida.csv");
             // ***************************************************************************************************************************
 
@@ -142,8 +145,8 @@ namespace AcadPlugin
 
             // Local do arquivo de dados 
             // ***************************************************************************************************************************
-            string curDwgPath = Directory.GetCurrentDirectory();
-            //var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/let.csv");
+            //string curDwgPath = Directory.GetCurrentDirectory();
+            string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
             var fileData = new StreamReader(curDwgPath + "\\let.csv");
             // ***************************************************************************************************************************
 
@@ -208,7 +211,7 @@ namespace AcadPlugin
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-            string curDwgPath = Directory.GetCurrentDirectory();
+            string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
             StreamWriter fileOut = new StreamWriter(curDwgPath + "\\blocksData.csv");
 
             using (var tr = db.TransactionManager.StartTransaction())
