@@ -194,6 +194,45 @@ namespace AcadPlugin
             }
         }
 
+        [CommandMethod("TTT")]
+        public void ReadBlocksData()
+        {
+            Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            string curDwgPath = Directory.GetCurrentDirectory();
+            StreamWriter fileOut = new StreamWriter(curDwgPath + "\\blocksData.csv");
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable BlkTbl = tr.GetObject(db.BlockTableId, OpenMode.ForWrite) as BlockTable;
+                BlockTableRecord BlkTblRec = tr.GetObject(BlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
+                ObjectId extId = dbModelSpace.ExtensionDictionary;
+                DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
+
+                foreach (DBDictionaryEntry dbEntry in dbExt)
+                {
+                    string indexBlock = dbEntry.Key;
+                    var teste = tr.GetObject(dbEntry.Value, OpenMode.ForRead);
+                    //BlockReference objBlk = tr.GetObject(dbEntry.Value, OpenMode.ForRead) as BlockReference;
+
+                    //string blkName = objBlk.Name;
+                    //double blkRot = objBlk.Rotation;
+                    //double blkX = objBlk.Position.X;
+                    //double blkY = objBlk.Position.Y;
+
+                    // Falta Pegar o valor do atributo (que ainda nem foi setado) ************************************************************
+
+                    //fileOut.WriteLine(indexBlock + ";" + blkName + ";" + blkRot + ";" + blkX + ";" + blkY + ";");
+                }
+
+                fileOut.Close();
+                tr.Commit();
+            }
+        }
+
         public Point2d GetPtFromHandleBlock(Database db, DBDictionary dbExt, string idHn)
         {
             BlockReference blk;
