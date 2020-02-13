@@ -18,7 +18,6 @@ namespace AcadPlugin
         [CommandMethod("IDA")]
         public void ImportEnvData()
         {
-
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
@@ -134,7 +133,7 @@ namespace AcadPlugin
             }
         }
 
-        [CommandMethod("LET")]
+        [CommandMethod("ELET")]
         public void ConnectConduits()
         {
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
@@ -202,7 +201,7 @@ namespace AcadPlugin
             }
         }
 
-        [CommandMethod("TTT")]
+        [CommandMethod("LEBLOCK")]
         public void ReadBlocksData()
         {
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
