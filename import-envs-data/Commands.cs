@@ -18,15 +18,17 @@ namespace AcadPlugin
         [CommandMethod("IDA")]
         public void ImportEnvData()
         {
-
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
+
+
             // Local do arquivo de dados 
             // ************************************************************************s***************************************************
             //var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/ida.csv");
-            string curDwgPath = Directory.GetCurrentDirectory();
+            //string curDwgPath = Directory.GetCurrentDirectory();
+            string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
             var fileData = new StreamReader(curDwgPath + "\\ida.csv");
             // ***************************************************************************************************************************
 
@@ -134,7 +136,7 @@ namespace AcadPlugin
             }
         }
 
-        [CommandMethod("LET")]
+        [CommandMethod("ELET")]
         public void ConnectConduits()
         {
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
@@ -143,8 +145,8 @@ namespace AcadPlugin
 
             // Local do arquivo de dados 
             // ***************************************************************************************************************************
-            string curDwgPath = Directory.GetCurrentDirectory();
-            //var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/let.csv");
+            //string curDwgPath = Directory.GetCurrentDirectory();
+            string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
             var fileData = new StreamReader(curDwgPath + "\\let.csv");
             // ***************************************************************************************************************************
 
@@ -157,6 +159,7 @@ namespace AcadPlugin
                 DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
                 ObjectId extId = dbModelSpace.ExtensionDictionary;
                 DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
+                Point3d ptAux;
                 Point2d ptVert;
                 int indexVert;
 
@@ -167,18 +170,25 @@ namespace AcadPlugin
 
                     using(Polyline oPLine = new Polyline())
                     {
+                        // address pode ser um index ou um ponto
                         foreach(string address in sLine)
                         {
                             if(address != "")
                             {
+                                // Se tem vírgula é um ponto, onde suas coordenadas
+                                // são separadas por uma vírgula.
                                 if (address.Contains(','))
                                 {
                                     string[] coords = address.Split(',');
                                     ptVert = new Point2d(Convert.ToDouble(coords[0]), Convert.ToDouble(coords[1]));
                                 }
+                                // Se não tem vírgula, é um index, 
+                                // na qual é usado o método 'GetRefBlkFromIndex' 
+                                // para pegar o ponto do bloco.
                                 else
                                 {
-                                    ptVert = GetPtFromHandleBlock(db, dbExt, address);
+                                    ptAux = GetRefBlkFromIndex(db, dbExt, address).Position;
+                                    ptVert = new Point2d(ptAux.X, ptAux.Y);
                                 }
 
                                 //oPLine.SetPointAt(indexPoint, ptVert);
@@ -194,7 +204,53 @@ namespace AcadPlugin
             }
         }
 
-        public Point2d GetPtFromHandleBlock(Database db, DBDictionary dbExt, string idHn)
+        [CommandMethod("LEBLOCK")]
+        public void ReadBlocksData()
+        {
+            Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
+            Editor ed = doc.Editor;
+
+            string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
+            StreamWriter fileOut = new StreamWriter(curDwgPath + "\\blocksData.csv");
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                BlockTable BlkTbl = tr.GetObject(db.BlockTableId, OpenMode.ForWrite) as BlockTable;
+                BlockTableRecord BlkTblRec = tr.GetObject(BlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+                DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
+                ObjectId extId = dbModelSpace.ExtensionDictionary;
+                DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
+
+                foreach (DBDictionaryEntry dbEntry in dbExt)
+                {
+                    try
+                    {
+                        string indexBlock = dbEntry.Key;
+                        BlockReference blkRef = GetRefBlkFromIndex(db, dbExt, indexBlock);
+
+                        string blkName = blkRef.Name;
+                        double blkRot = blkRef.Rotation;
+                        string blkX = blkRef.Position.X.ToString("n2");
+                        string blkY = blkRef.Position.Y.ToString("n2");
+
+                        // Falta Pegar o valor do atributo (que ainda nem foi setado) ************************************************************
+
+                        fileOut.WriteLine(indexBlock + ";" + blkName + ";" + blkRot + ";" + blkX + ";" + blkY + ";");
+                    }
+                    catch (System.Exception)
+                    {
+
+                    }
+                    
+                }
+
+                fileOut.Close();
+                tr.Commit();
+            }
+        }
+
+        public BlockReference GetRefBlkFromIndex(Database db, DBDictionary dbExt, string idHn)
         {
             BlockReference blk;
 
@@ -215,7 +271,9 @@ namespace AcadPlugin
 
             }
 
-            return new Point2d(blk.Position.X, blk.Position.Y);
+            return blk;
         }
+
+
     }
 }
