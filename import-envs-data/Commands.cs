@@ -119,7 +119,7 @@ namespace AcadPlugin
                                     ResultBuffer rb = new ResultBuffer();
                                     rb.Add(new TypedValue((int)DxfCode.ExtendedDataHandle, eBlk.Handle));
 
-                                    xRec.Data = rb;
+                                xRec.Data = rb;
 
                                     dbExt.SetAt(sBlkId, xRec);
                                     tr.AddNewlyCreatedDBObject(xRec, true);
@@ -221,6 +221,27 @@ namespace AcadPlugin
                 DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
                 ObjectId extId = dbModelSpace.ExtensionDictionary;
                 DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
+
+                List<ObjectId> ids = null;
+                IEnumerable<DBDictionaryEntry> b = dbExt.Cast<DBDictionaryEntry>();
+
+                //ids = b.Where(id => id.)
+                
+
+                PromptSelectionResult acSSRes = ed.GetSelection();
+                if (acSSRes.Status == PromptStatus.OK)
+                {
+                    SelectionSet acSSet = acSSRes.Value;
+
+                    foreach (SelectedObject obj in acSSet)
+                    {
+                        var teste = from a in dbExt.Cast<dynamic>()
+                                    where a.Value == tr.GetObject(obj.ObjectId, OpenMode.ForRead).Handle.ToString()
+                                    select a;
+                    }
+                }
+
+                
 
                 foreach (DBDictionaryEntry dbEntry in dbExt)
                 {
