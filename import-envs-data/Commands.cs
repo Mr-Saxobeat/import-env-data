@@ -102,28 +102,10 @@ namespace AcadPlugin
                                 tr.AddNewlyCreatedDBObject(acBlkRef, true);
 
                                 Entity eBlk = (Entity)tr.GetObject(acBlkRef.Id, OpenMode.ForRead);
+                                DBObject blkDb = (DBObject)tr.GetObject(acBlkRef.Id, OpenMode.ForRead);
 
-                                ObjectId extId = dbModelSpace.ExtensionDictionary;
-
-                                if (extId == ObjectId.Null)
-                                {
-                                    dbModelSpace.CreateExtensionDictionary();
-                                    extId = dbModelSpace.ExtensionDictionary;
-                                }
-
-                                DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForWrite);
-
-                                //if (!dbExt.Contains("Ids"))
-                                //{
-                                    Xrecord xRec = new Xrecord();
-                                    ResultBuffer rb = new ResultBuffer();
-                                    rb.Add(new TypedValue((int)DxfCode.ExtendedDataHandle, eBlk.Handle));
-
-                                xRec.Data = rb;
-
-                                    dbExt.SetAt(sBlkId, xRec);
-                                    tr.AddNewlyCreatedDBObject(xRec, true);
-                                //}
+                                RecOnXDict(dbModelSpace, sBlkId, DxfCode.Handle, eBlk.Handle, tr);
+                                RecOnXDict(blkDb, "id", DxfCode.XTextString, sBlkId, tr);
                             }
                         }
 
@@ -134,6 +116,32 @@ namespace AcadPlugin
                 fileData.Close();
                 tr.Commit();
             }
+        }
+
+        // **********************************************************************************************************
+        // Preciso saber uma forma de armazenar o id do bloco dentro dele
+        // para assim poder poder pegar dps no outro comando "leblock"
+        // **********************************************************************************************************
+
+        public void RecOnXDict(DBObject dbObj, string location, DxfCode dxfC, dynamic data, Transaction tr)
+        {
+            ObjectId extId = dbObj.ExtensionDictionary;
+
+            if (extId == ObjectId.Null)
+            {
+                dbObj.CreateExtensionDictionary();
+                extId = dbObj.ExtensionDictionary;
+            }
+
+            DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForWrite);
+            Xrecord xRec = new Xrecord();
+            ResultBuffer rb = new ResultBuffer();
+            rb.Add(new TypedValue((int)dxfC, data));
+
+            xRec.Data = rb;
+
+            dbExt.SetAt(location, xRec);
+            tr.AddNewlyCreatedDBObject(xRec, true);
         }
 
         [CommandMethod("ELET")]
@@ -226,19 +234,15 @@ namespace AcadPlugin
                 IEnumerable<DBDictionaryEntry> b = dbExt.Cast<DBDictionaryEntry>();
 
                 //ids = b.Where(id => id.)
-                
+
+                var listDb = dbExt.Cast<dynamic>();
 
                 PromptSelectionResult acSSRes = ed.GetSelection();
                 if (acSSRes.Status == PromptStatus.OK)
                 {
                     SelectionSet acSSet = acSSRes.Value;
-
-                    foreach (SelectedObject obj in acSSet)
-                    {
-                        var teste = from a in dbExt.Cast<dynamic>()
-                                    where a.Value == tr.GetObject(obj.ObjectId, OpenMode.ForRead).Handle.ToString()
-                                    select a;
-                    }
+                    var a = tr.GetObject(acSSet[0].ObjectId, OpenMode.ForRead);
+                   
                 }
 
                 

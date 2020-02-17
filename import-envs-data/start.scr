@@ -1,1 +1,5 @@
-﻿netload "import-envs-data.dll"
+﻿open "C:\Users\weiglas.ribeiro.LANGAMER\Documents\Git\import-env-data\Arquivos_Teste\PAVIMENTO.dwg"
+netload "import-envs-data.dll"
+IDA
+
+LEBLOCK
