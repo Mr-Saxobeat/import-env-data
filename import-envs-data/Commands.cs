@@ -22,124 +22,143 @@ namespace AcadPlugin
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
-
-
-            // Local do arquivo de dados 
-            // ************************************************************************s***************************************************
-            //var fileData = new StreamReader("Z:/Lisp/Arquivos_Teste/ida.csv");
-            //string curDwgPath = Directory.GetCurrentDirectory();
+            // Local do arquivo de dados: O diretório do .dwg onde está sendo 
+            // executado o programa.
             string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
+
+            // Cria um StreamReader para ler o arquivo 'ida.csv', que contém os
+            // dados para inserir os blocos.
             var fileData = new StreamReader(curDwgPath + "\\ida.csv");
-            // ***************************************************************************************************************************
 
-
-            // Local dos blocos a serem carregados
-            // ***************************************************************************************************************************
-            //String blkPath = "Z:/Lisp/BLOCOS";
+            // Diretório dos arquivos '.dwg' dos blocos. Pois, caso o bloco
+            // não exista no desenho atual, o programa irá procurar os blocos
+            // em arquivos '.dwg' externos.
             String blkPath = curDwgPath;
-            // ***************************************************************************************************************************
-
+            
+            // Armazenará uma linha que será lida do 'ida.csv'
             string[] sFileLine;
+
+            // Informações dos blocos, que serão lidos do 'ida.csv'
             string sBlkId;
             string sBlkName;
-            string[] sBlkCoord;
+            //string[] sBlkCoord;
             Point3d ptBlkOrigin;
             string sBlkRot;
+            ObjectId blkId = ObjectId.Null;
 
             using (var tr = db.TransactionManager.StartTransaction())
             {
 
                 BlockTable acBlkTbl = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-                ObjectId blkRecId = ObjectId.Null;
+
+                // O ModelSpace será usado para gravar em seu Extension Dictionary os Id's e os handles dos blocos.
+                DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
 
                 using (var acBlkTblRec = new BlockTableRecord())
                 {
-                    DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
                     int contId = 0;
                     while (!fileData.EndOfStream)
                     {
+                        // sFileLine é uma array que lê uma linha do 'ida.csv'
+                        // tendo como separador de colunas ';'
                         sFileLine = fileData.ReadLine().Split(';');
 
-                        // Atribui os parêmtros de cada bloco que será inserido
-                        // baseado no arquivo IDA.
-                        sBlkId = Convert.ToString(contId);
+                        // Atribui os parâmetros de cada bloco que será inserido
+                        // baseado no 'ida.csv'
+                        sBlkId = Convert.ToString(contId); // O id não é declarado no 'ida.csv' pois este arquivo vem do matlab.
                         sBlkName = sFileLine[0];
                         sBlkRot = sFileLine[1];
+                        // Aqui é usado um Point3d pois é requisitado para criar um 'BlockReference' e não um Point2d.
                         ptBlkOrigin = new Point3d(Convert.ToDouble(sFileLine[2]), Convert.ToDouble(sFileLine[3]), 0);
 
-                        // ******************************************************************************************************************************************
-                        // Falta pegar o atributo (que é o último argumento dado no arquivo que Leo passou
 
+
+
+                        // ******************************************************************************************************************************************
+                        // ******************************************************************************************************************************************
+                        // Falta pegar os valores dos atributos dos blocos (que é o último argumento dado no 'ida.csv').
+                        // ******************************************************************************************************************************************
+                        // ******************************************************************************************************************************************
+
+
+
+                        // Se o bloco não existe no desenho atual
                         if (!acBlkTbl.Has(sBlkName))
                         {
                             try
                             {
                                 using (var blkDb = new Database(false, true))
                                 {
+                                    // Lêo '.dwg' do bloco, baseado no diretório especificado.
                                     blkDb.ReadDwgFile(blkPath + "/" + sBlkName + ".dwg", FileOpenMode.OpenForReadAndAllShare, true, "");
 
-                                    // Falta configurar a rotação do bloco *********************************************************************
-                                    ObjectId blkId = db.Insert(sBlkName, blkDb, true);
-
+                                    // E então insere o bloco no banco de dados do desenho atual.
+                                    // Mas ainda não está inserido no desenho.
+                                    blkId = db.Insert(sBlkName, blkDb, true); // Este método retorna o id do bloco.
                                 }
                             }
-                            catch
+                            catch // Expressão para pegar erros.
                             {
-
+                                
                             }
                         }
-                       
-                        blkRecId = acBlkTbl[sBlkName];    
 
-                        if (blkRecId != ObjectId.Null)
+                        if (blkId != ObjectId.Null)
                         {
-                            using (var acBlkRef = new BlockReference(ptBlkOrigin, blkRecId))
+                            // Aqui o bloco será adicionado ao desenho e serão gravados 
+                            // seu id (identificação dada pelo programa atual, começando em 0 e incrementado 1 a 1)
+                            // pareado ao seu handle, para o uso dos outros comandos.
+                            using (var acBlkRef = new BlockReference(ptBlkOrigin, blkId))
                             {
                                 BlockTableRecord acCurSpaceBlkTblRec;
                                 acCurSpaceBlkTblRec = tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite) as BlockTableRecord;
-
                                 acCurSpaceBlkTblRec.AppendEntity(acBlkRef);
                                 tr.AddNewlyCreatedDBObject(acBlkRef, true);
 
                                 Entity eBlk = (Entity)tr.GetObject(acBlkRef.Id, OpenMode.ForRead);
                                 DBObject blkDb = (DBObject)tr.GetObject(acBlkRef.Id, OpenMode.ForRead);
 
+                                // Grava o id(dado pelo programa - base 0) e o handle do bloco
+                                // no Extension Dictionary do ModelSpace.
                                 RecOnXDict(dbModelSpace, sBlkId, DxfCode.Handle, eBlk.Handle, tr);
+
+                                // Grava o id do bloco em seu próprio Extension Dictionary, para fazer
+                                // uma 'busca reversa' no XDic do ModelSpace depois.
                                 RecOnXDict(blkDb, "id", DxfCode.XTextString, sBlkId, tr);
                             }
                         }
-
                         contId++;
                     }
                 }
-                
                 fileData.Close();
                 tr.Commit();
             }
         }
 
-        // **********************************************************************************************************
-        // Preciso saber uma forma de armazenar o id do bloco dentro dele
-        // para assim poder poder pegar dps no outro comando "leblock"
-        // **********************************************************************************************************
-
+        // Função para gravar os dados no Extension Dictionary do objeto dado.
         public void RecOnXDict(DBObject dbObj, string location, DxfCode dxfC, dynamic data, Transaction tr)
         {
+            // Pega o Id do XDic do objeto.
             ObjectId extId = dbObj.ExtensionDictionary;
 
+            // Se não existe um XDic, cria-o
             if (extId == ObjectId.Null)
             {
                 dbObj.CreateExtensionDictionary();
                 extId = dbObj.ExtensionDictionary;
             }
 
+            // Pega o XDic a partir do seu Id.
             DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForWrite);
+
+            // Cria um XRecord, que guardará a informação
             Xrecord xRec = new Xrecord();
             ResultBuffer rb = new ResultBuffer();
             rb.Add(new TypedValue((int)dxfC, data));
 
             xRec.Data = rb;
 
+            // Adiciona a informação no XDic do objeto.
             dbExt.SetAt(location, xRec);
             tr.AddNewlyCreatedDBObject(xRec, true);
         }
@@ -212,6 +231,9 @@ namespace AcadPlugin
             }
         }
 
+
+        // Comando que lê dados dos blocos selecionados pelo usuário
+        // e exporta um arquivo '.csv' com esses dados.
         [CommandMethod("LEBLOCK")]
         public void ReadBlocksData()
         {
@@ -219,40 +241,52 @@ namespace AcadPlugin
             Database db = doc.Database;
             Editor ed = doc.Editor;
 
+            // Diretório do desenho atual que chamou o comando.
             string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
+
+            // Arquivo onde será escrito os dados obtidos.
             StreamWriter fileOut = new StreamWriter(curDwgPath + "\\blocksData.csv");
 
             using (var tr = db.TransactionManager.StartTransaction())
             {
-                BlockTable BlkTbl = tr.GetObject(db.BlockTableId, OpenMode.ForWrite) as BlockTable;
-                BlockTableRecord BlkTblRec = tr.GetObject(BlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
-                DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
+                var BlkTbl = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForWrite);
+                var BlkTblRec = (BlockTableRecord)tr.GetObject(BlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite);
+                var dbModelSpace = (DBObject)tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
                 ObjectId extId = dbModelSpace.ExtensionDictionary;
-                DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
-
-                List<ObjectId> ids = null;
-                IEnumerable<DBDictionaryEntry> b = dbExt.Cast<DBDictionaryEntry>();
-
-                //ids = b.Where(id => id.)
-
-                var listDb = dbExt.Cast<dynamic>();
+                var dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
 
                 PromptSelectionResult acSSRes = ed.GetSelection();
                 if (acSSRes.Status == PromptStatus.OK)
                 {
                     SelectionSet acSSet = acSSRes.Value;
-                    var a = tr.GetObject(acSSet[0].ObjectId, OpenMode.ForRead);
-                   
-                }
 
-                
-
-                foreach (DBDictionaryEntry dbEntry in dbExt)
-                {
-                    try
+                    foreach (SelectedObject selectedObject in acSSet)
                     {
-                        string indexBlock = dbEntry.Key;
-                        BlockReference blkRef = GetRefBlkFromIndex(db, dbExt, indexBlock);
+                        // Pega o id guardado em seu XDic******************************************************
+                        var blkRef = (BlockReference)tr.GetObject(selectedObject.ObjectId, OpenMode.ForRead);
+
+                        // Se o bloco não tem XDic, cria-o e já grava o dado
+                        if(blkRef.ExtensionDictionary == ObjectId.Null)
+                        {
+                            blkRef.UpgradeOpen();
+                            RecOnXDict((DBObject)blkRef, "id", DxfCode.XTextString, dbExt.Count.ToString(), tr);
+                        }
+
+                        var blkDic = (DBDictionary)tr.GetObject(blkRef.ExtensionDictionary, OpenMode.ForRead);
+                        var xRecBlk = (Xrecord)tr.GetObject(blkDic.GetAt("id"), OpenMode.ForRead);
+                        ResultBuffer rb = xRecBlk.Data;
+                        TypedValue[] xRecData = rb.AsArray();
+                        string sBlkId = xRecData[0].Value.ToString();
+                        //*************************************************************************************
+
+                        // Procura o Id do bloco no XDic do ModelSpace
+                        var xRecMS = (Xrecord)tr.GetObject(dbExt.GetAt(sBlkId), OpenMode.ForRead);
+
+                        // Se não existe o id no XDic do ModelSpace, grava-o
+                        if (xRecMS.Equals(null))
+                        {
+                            RecOnXDict(dbModelSpace, sBlkId, DxfCode.Handle, blkRef.Handle, tr);
+                        }
 
                         string blkName = blkRef.Name;
                         double blkRot = blkRef.Rotation;
@@ -261,13 +295,8 @@ namespace AcadPlugin
 
                         // Falta Pegar o valor do atributo (que ainda nem foi setado) ************************************************************
 
-                        fileOut.WriteLine(indexBlock + ";" + blkName + ";" + blkRot + ";" + blkX + ";" + blkY + ";");
+                        fileOut.WriteLine(sBlkId + ";" + blkName + ";" + blkRot + ";" + blkX + ";" + blkY + ";");
                     }
-                    catch (System.Exception)
-                    {
-
-                    }
-                    
                 }
 
                 fileOut.Close();
