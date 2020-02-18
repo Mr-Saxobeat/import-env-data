@@ -1,3 +1,3 @@
 weiglas.ribeiro
 CHAPPIE 
-terça-feira, 18 de fevereiro de 2020  11:39:46
+quarta-feira, 19 de fevereiro de 2020  09:32:28
