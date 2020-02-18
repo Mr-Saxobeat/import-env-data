@@ -163,6 +163,12 @@ namespace AcadPlugin
             tr.AddNewlyCreatedDBObject(xRec, true);
         }
 
+        // Comando que liga os eletrodutos a partir do arquivo
+        // 'let.csv' que se encontra no diretório do desenho atual.
+        // O arquivo 'let.csv' é exportado pelo matlab com o formato:
+        // id1;id2;id3; OU id1;pontoX,pontoY;id2;
+        // e qualquer combinação de ids com pontos
+        // (note que as coordenadas de um ponto são separados por vírgula).
         [CommandMethod("ELET")]
         public void ConnectConduits()
         {
@@ -265,11 +271,13 @@ namespace AcadPlugin
                         // Pega o id guardado em seu XDic******************************************************
                         var blkRef = (BlockReference)tr.GetObject(selectedObject.ObjectId, OpenMode.ForRead);
 
-                        // Se o bloco não tem XDic, cria-o e já grava o dado
+                        // Se o bloco não tem XDic, cria-o e já grava o dado tanto em seu próprio
+                        // XDic como no XDic do ModelSpace.
                         if(blkRef.ExtensionDictionary == ObjectId.Null)
                         {
                             blkRef.UpgradeOpen();
                             RecOnXDict((DBObject)blkRef, "id", DxfCode.XTextString, dbExt.Count.ToString(), tr);
+                            RecOnXDict(dbModelSpace, dbExt.Count.ToString(), DxfCode.Handle, blkRef.Handle, tr);
                         }
 
                         var blkDic = (DBDictionary)tr.GetObject(blkRef.ExtensionDictionary, OpenMode.ForRead);
@@ -279,31 +287,25 @@ namespace AcadPlugin
                         string sBlkId = xRecData[0].Value.ToString();
                         //*************************************************************************************
 
-                        // Procura o Id do bloco no XDic do ModelSpace
-                        var xRecMS = (Xrecord)tr.GetObject(dbExt.GetAt(sBlkId), OpenMode.ForRead);
-
-                        // Se não existe o id no XDic do ModelSpace, grava-o
-                        if (xRecMS.Equals(null))
-                        {
-                            RecOnXDict(dbModelSpace, sBlkId, DxfCode.Handle, blkRef.Handle, tr);
-                        }
-
                         string blkName = blkRef.Name;
                         double blkRot = blkRef.Rotation;
                         string blkX = blkRef.Position.X.ToString("n2");
                         string blkY = blkRef.Position.Y.ToString("n2");
 
+                        //************************************************************************************************************************
                         // Falta Pegar o valor do atributo (que ainda nem foi setado) ************************************************************
+                        //************************************************************************************************************************
 
                         fileOut.WriteLine(sBlkId + ";" + blkName + ";" + blkRot + ";" + blkX + ";" + blkY + ";");
                     }
                 }
-
                 fileOut.Close();
                 tr.Commit();
             }
         }
 
+        // Função para pegar o ReferenceBlock gravado no XDic do ModelSpace
+        // a partir do id dado pelo programa.
         public BlockReference GetRefBlkFromIndex(Database db, DBDictionary dbExt, string idHn)
         {
             BlockReference blk;
