@@ -1,1 +1,5 @@
 *.suo
+*.dwl
+*.dwl2
+*/blocksData.csv
+*.cache
