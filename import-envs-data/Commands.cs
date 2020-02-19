@@ -264,7 +264,7 @@ namespace AcadPlugin
 
                     foreach (SelectedObject selectedObject in acSSet)
                     {
-                        // Pega o id guardado em seu XDic******************************************************
+                        // Início: Pega o id guardado em seu XDic******************************************************
                         var blkRef = (BlockReference)tr.GetObject(selectedObject.ObjectId, OpenMode.ForRead);
 
                         // Se o bloco não tem XDic, cria-o e já grava o dado
@@ -280,7 +280,21 @@ namespace AcadPlugin
                         ResultBuffer rb = xRecBlk.Data;
                         TypedValue[] xRecData = rb.AsArray();
                         string sBlkId = xRecData[0].Value.ToString();
-                        //*************************************************************************************
+                        // Fim: Pega o id guardado em seu XDic*************************************************************************************
+
+
+
+                        // Início: checa se o id do bloco confere com o handle registrado no MS ***************************************************
+                        var blkRef2 = GetRefBlkFromIndex(db, dbExt, sBlkId);
+
+                        if(blkRef.Id != blkRef2.Id)
+                        {
+                            RecOnXDict(blkRef, "id", DxfCode.XTextString, dbExt.Count.ToString(), tr);
+                            RecOnXDict(dbModelSpace, dbExt.Count.ToString(), DxfCode.Handle, blkRef.Handle, tr);
+                        }
+                        // Fim: checa se o id do bloco confere com o handle registrado no MS ******************************************************
+
+
 
                         string blkName = blkRef.Name;
                         double blkRot = blkRef.Rotation;

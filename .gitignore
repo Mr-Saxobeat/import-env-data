@@ -9,4 +9,5 @@
 *.dll
 *.pdb
 */desktop.ini
-
+*.ide-shm
+*.ide-wal
