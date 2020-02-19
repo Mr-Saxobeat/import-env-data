@@ -4,3 +4,7 @@
 */blocksData.csv
 *.cache
 */acad.err
+*/PAVIMENTO.bak
+*/desktop.ini
+*.dll
+*.pdb
