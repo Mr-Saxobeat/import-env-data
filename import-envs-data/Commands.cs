@@ -283,7 +283,6 @@ namespace AcadPlugin
                         string sBlkId = xRecData[0].Value.ToString();
                         // Fim: Pega o id guardado em seu XDic*************************************************************************************
 
-
                         // Início: checa se o id do bloco confere com o handle registrado no MS ***************************************************
                         var blkRef2 = GetRefBlkFromIndex(db, dbExt, sBlkId);
 
@@ -293,7 +292,6 @@ namespace AcadPlugin
                             RecOnXDict(dbModelSpace, dbExt.Count.ToString(), DxfCode.Handle, blkRef.Handle, tr);
                         }
                         // Fim: checa se o id do bloco confere com o handle registrado no MS ******************************************************
-
 
                         string blkName = blkRef.Name;
                         double blkRot = blkRef.Rotation;
