@@ -43,6 +43,7 @@ namespace AcadPlugin
             Point3d ptBlkOrigin;
             string sBlkRot;
             ObjectId blkId = ObjectId.Null;
+            string[] sBlkAtts;
 
             using (var tr = db.TransactionManager.StartTransaction())
             {
@@ -68,8 +69,7 @@ namespace AcadPlugin
                         sBlkRot = sFileLine[1];
                         // Aqui é usado um Point3d pois é requisitado para criar um 'BlockReference' e não um Point2d.
                         ptBlkOrigin = new Point3d(Convert.ToDouble(sFileLine[2]), Convert.ToDouble(sFileLine[3]), 0);
-
-
+                        sBlkAtts = sFileLine[4].Split(new string[] { "//" }, StringSplitOptions.None);
 
 
                         // ******************************************************************************************************************************************
@@ -112,11 +112,25 @@ namespace AcadPlugin
                             // pareado ao seu handle, para o uso dos outros comandos.
                             using (var acBlkRef = new BlockReference(ptBlkOrigin, blkId))
                             {
+
+                                // Início: Setar atributos do bloco ************************************************************
+                                AttributeCollection attCol = acBlkRef.AttributeCollection;
+                                string[] attSplited;
+
+                                foreach (string att in sBlkAtts)
+                                {
+                                    attSplited = att.Split(new string[] { "::" }, StringSplitOptions.None);
+
+                                    
+
+                                }
+                                // Fim: Setar atributos do bloco ************************************************************
+
+
                                 BlockTableRecord acCurSpaceBlkTblRec;
                                 acCurSpaceBlkTblRec = tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite) as BlockTableRecord;
                                 acCurSpaceBlkTblRec.AppendEntity(acBlkRef);
                                 tr.AddNewlyCreatedDBObject(acBlkRef, true);
-
 
                                 Entity eBlk = (Entity)tr.GetObject(acBlkRef.Id, OpenMode.ForRead);
                                 DBObject blkDb = (DBObject)tr.GetObject(acBlkRef.Id, OpenMode.ForRead);
