@@ -39,21 +39,20 @@ namespace AcadPlugin
             // Informações dos blocos, que serão lidos do 'ida.csv'
             string sBlkId;
             string sBlkName;
-            //string[] sBlkCoord;
             Point3d ptBlkOrigin;
             string sBlkRot;
-            ObjectId blkId = ObjectId.Null;
+            ObjectId newBlkTblRec = ObjectId.Null;
             string[] sBlkAtts;
 
             using (var tr = db.TransactionManager.StartTransaction())
             {
 
                 BlockTable acBlkTbl = tr.GetObject(db.BlockTableId, OpenMode.ForRead) as BlockTable;
-
+                
                 // O ModelSpace será usado para gravar em seu Extension Dictionary os Id's e os handles dos blocos.
                 DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
 
-                using (var acBlkTblRec = new BlockTableRecord())
+                using (BlockTableRecord acBlkTblRec = (BlockTableRecord)tr.GetObject(acBlkTbl[BlockTableRecord.ModelSpace], OpenMode.ForRead))
                 {
                     int contId = 0;
                     while (!fileData.EndOfStream)
@@ -92,38 +91,38 @@ namespace AcadPlugin
 
                                     // E então insere o bloco no banco de dados do desenho atual.
                                     // Mas ainda não está inserido no desenho.
-                                    blkId = db.Insert(sBlkName, blkDb, true); // Este método retorna o id do bloco.
+                                    newBlkTblRec = db.Insert(sBlkName, blkDb, true); // Este método retorna o id do bloco.
                                 }
                             }
                             catch // Expressão para pegar erros.
                             {
-                                
+
                             }
                         }
                         else
                         {
-                            blkId = acBlkTbl[sBlkName];
+                            newBlkTblRec = acBlkTbl[sBlkName];
                         }
 
-                        if (blkId != ObjectId.Null)
+                        if (newBlkTblRec != ObjectId.Null)
                         {
                             // Aqui o bloco será adicionado ao desenho e serão gravados 
                             // seu id (identificação dada pelo programa atual, começando em 0 e incrementado 1 a 1)
                             // pareado ao seu handle, para o uso dos outros comandos.
-                            using (var acBlkRef = new BlockReference(ptBlkOrigin, blkId))
+                            using (BlockReference acBlkRef = new BlockReference(ptBlkOrigin, newBlkTblRec))
                             {
 
-                                // Início: Setar atributos do bloco ************************************************************
+                                // Início: Setar atributos do bloco ***********************************************************
                                 AttributeCollection attCol = acBlkRef.AttributeCollection;
                                 string[] attSplited;
 
-                                foreach (string att in sBlkAtts)
-                                {
-                                    attSplited = att.Split(new string[] { "::" }, StringSplitOptions.None);
+                                //foreach (string att in sBlkAtts)
+                                //{
+                                //    attSplited = att.Split(new string[] { "::" }, StringSplitOptions.None);
 
-                                    
 
-                                }
+
+                                //}
                                 // Fim: Setar atributos do bloco ************************************************************
 
 
