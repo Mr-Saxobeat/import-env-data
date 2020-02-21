@@ -41,7 +41,8 @@ namespace AcadPlugin
             string sBlkName;
             Point3d ptBlkOrigin;
             string sBlkRot;
-            ObjectId newBlkTblRec = ObjectId.Null;
+            ObjectId idBlkTblRec = ObjectId.Null;
+            BlockTableRecord blkTblkRec = null;
             string[] sBlkAtts;
 
             using (var tr = db.TransactionManager.StartTransaction())
@@ -86,12 +87,12 @@ namespace AcadPlugin
                             {
                                 using (var blkDb = new Database(false, true))
                                 {
-                                    // Lêo '.dwg' do bloco, baseado no diretório especificado.
+                                    // Lê o '.dwg' do bloco, baseado no diretório especificado.
                                     blkDb.ReadDwgFile(blkPath + "/" + sBlkName + ".dwg", FileOpenMode.OpenForReadAndAllShare, true, "");
 
                                     // E então insere o bloco no banco de dados do desenho atual.
                                     // Mas ainda não está inserido no desenho.
-                                    newBlkTblRec = db.Insert(sBlkName, blkDb, true); // Este método retorna o id do bloco.
+                                    idBlkTblRec = db.Insert(sBlkName, blkDb, true); // Este método retorna o id do bloco.
                                 }
                             }
                             catch // Expressão para pegar erros.
@@ -101,35 +102,52 @@ namespace AcadPlugin
                         }
                         else
                         {
-                            newBlkTblRec = acBlkTbl[sBlkName];
+                            idBlkTblRec = acBlkTbl[sBlkName];
                         }
 
-                        if (newBlkTblRec != ObjectId.Null)
+                        if (idBlkTblRec != ObjectId.Null)
                         {
+
                             // Aqui o bloco será adicionado ao desenho e serão gravados 
                             // seu id (identificação dada pelo programa atual, começando em 0 e incrementado 1 a 1)
                             // pareado ao seu handle, para o uso dos outros comandos.
-                            using (BlockReference acBlkRef = new BlockReference(ptBlkOrigin, newBlkTblRec))
+                            using (BlockReference acBlkRef = new BlockReference(ptBlkOrigin, idBlkTblRec))
                             {
-
-                                // Início: Setar atributos do bloco ***********************************************************
-                                AttributeCollection attCol = acBlkRef.AttributeCollection;
-                                string[] attSplited;
-
-                                //foreach (string att in sBlkAtts)
-                                //{
-                                //    attSplited = att.Split(new string[] { "::" }, StringSplitOptions.None);
-
-
-
-                                //}
-                                // Fim: Setar atributos do bloco ************************************************************
-
-
                                 BlockTableRecord acCurSpaceBlkTblRec;
                                 acCurSpaceBlkTblRec = tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite) as BlockTableRecord;
                                 acCurSpaceBlkTblRec.AppendEntity(acBlkRef);
                                 tr.AddNewlyCreatedDBObject(acBlkRef, true);
+
+                                blkTblkRec = idBlkTblRec.GetObject(OpenMode.ForWrite) as BlockTableRecord;
+                                if (blkTblkRec.HasAttributeDefinitions)
+                                {
+                                    RXClass rxClass = RXClass.GetClass(typeof(AttributeDefinition));
+                                    foreach (ObjectId idAttDef in blkTblkRec)
+                                    {
+                                        if(idAttDef.ObjectClass == rxClass)
+                                        {
+                                            DBObject obj = tr.GetObject(idAttDef, OpenMode.ForRead);
+
+                                            AttributeDefinition ad = obj as AttributeDefinition;
+                                            AttributeReference ar = new AttributeReference();
+                                            ar.SetAttributeFromBlock(ad, acBlkRef.BlockTransform);
+                                            ar.TextString = "teste";
+                                            
+
+                                            acBlkRef.AttributeCollection.AppendAttribute(ar);
+                                            tr.AddNewlyCreatedDBObject(ar, true);
+                                        }
+
+
+                                    }
+                                }
+
+                                // Início: Setar atributos do bloco ***********************************************************
+                                
+
+
+
+                                // Fim: Setar atributos do bloco ************************************************************
 
                                 Entity eBlk = (Entity)tr.GetObject(acBlkRef.Id, OpenMode.ForRead);
                                 DBObject blkDb = (DBObject)tr.GetObject(acBlkRef.Id, OpenMode.ForRead);
