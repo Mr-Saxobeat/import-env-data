@@ -8,6 +8,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 
 using AcAp = Autodesk.AutoCAD.ApplicationServices.Application;
+using System.Collections.Generic;
 
 namespace AcadPlugin
 {
@@ -44,6 +45,10 @@ namespace AcadPlugin
             ObjectId idBlkTblRec = ObjectId.Null;
             BlockTableRecord blkTblkRec = null;
             string[] sBlkAtts;
+            string[] oneAtt;
+            string blkTag;
+            string blkValue;
+            Dictionary<string, string> dicBlkAtts = new Dictionary<string, string>();
 
             using (var tr = db.TransactionManager.StartTransaction())
             {
@@ -70,6 +75,15 @@ namespace AcadPlugin
                         // Aqui é usado um Point3d pois é requisitado para criar um 'BlockReference' e não um Point2d.
                         ptBlkOrigin = new Point3d(Convert.ToDouble(sFileLine[2]), Convert.ToDouble(sFileLine[3]), 0);
                         sBlkAtts = sFileLine[4].Split(new string[] { "//" }, StringSplitOptions.None);
+
+                        foreach(var sBlkAtt in sBlkAtts)
+                        {
+                            oneAtt = sBlkAtt.Split(new string[] { "::" }, StringSplitOptions.None);
+                            blkTag = oneAtt[0];
+                            blkValue = oneAtt[1];
+
+                            dicBlkAtts.Add(blkTag, blkValue);
+                        }
 
 
                         // ******************************************************************************************************************************************
@@ -131,7 +145,11 @@ namespace AcadPlugin
                                             AttributeDefinition ad = obj as AttributeDefinition;
                                             AttributeReference ar = new AttributeReference();
                                             ar.SetAttributeFromBlock(ad, acBlkRef.BlockTransform);
-                                            ar.TextString = "teste";
+
+                                            if (dicBlkAtts.ContainsKey(ar.Tag))
+                                            {
+                                                ar.TextString = dicBlkAtts[ar.Tag];
+                                            }
                                             
 
                                             acBlkRef.AttributeCollection.AppendAttribute(ar);
@@ -162,6 +180,7 @@ namespace AcadPlugin
                             }
                         }
                         contId++;
+                        dicBlkAtts.Clear();
                     }
                 }
                 fileData.Close();
