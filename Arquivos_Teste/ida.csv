@@ -1,7 +1,7 @@
 luz;0;5.01;14.06;TAG1::weiglas//TAG2::baixo1//VISIBILIDADE::vis1;
-luz;0;9.47;13.98;TAG1::soriano//TAG2::baixo2//VISIBILIDADE::vis2;
+luz;0;9.47;13.98;TAG1::soriano//TAG2::baixo2//VISIBILIDADE::vis2//Distance1::1;
 luz;0;9.47;11.405;TAG1::ribeiro//TAG2::baixo3//VISIBILIDADE::vis1;
-luz;0;5.01;12.315;TAG1::luiz//TAG2::baixo4//VISIBILIDADE::vis2;
+luz;0;5.01;12.315;TAG1::luiz//TAG2::baixo4//VISIBILIDADE::vis2//Distance1::2;
 luz;0;7.09;13.11;TAG1::gONZAGA//TAG2::baixo5//VISIBILIDADE::vis1;
-luz;0;4.66;15.605;TAG1::dominguinhos//TAG2::baixo6//VISIBILIDADE::vis2;
+luz;0;4.66;15.605;TAG1::dominguinhos//TAG2::baixo6//VISIBILIDADE::vis2//Distance1::3;
 luz;0;2.79;12.31;TAG1::mestrinho//TAG2::baixo7//VISIBILIDADE::vis1;

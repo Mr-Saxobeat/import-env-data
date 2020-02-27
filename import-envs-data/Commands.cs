@@ -132,6 +132,7 @@ namespace AcadPlugin
                                 acCurSpaceBlkTblRec.AppendEntity(acBlkRef);
                                 tr.AddNewlyCreatedDBObject(acBlkRef, true);
 
+                                // Início: Setar atributos do bloco ***********************************************************
                                 blkTblkRec = idBlkTblRec.GetObject(OpenMode.ForWrite) as BlockTableRecord;
                                 if (blkTblkRec.HasAttributeDefinitions)
                                 {
@@ -155,16 +156,31 @@ namespace AcadPlugin
                                             acBlkRef.AttributeCollection.AppendAttribute(ar);
                                             tr.AddNewlyCreatedDBObject(ar, true);
                                         }
+                                    }
 
-
+                                    // Setar propriedades dos blocos dinâmicos
+                                    if (acBlkRef.IsDynamicBlock)
+                                    {
+                                        DynamicBlockReferencePropertyCollection pc = acBlkRef.DynamicBlockReferencePropertyCollection;
+                                        foreach(DynamicBlockReferenceProperty prop in pc)
+                                        {
+                                            if(dicBlkAtts.ContainsKey(prop.PropertyName))
+                                            {
+                                                // Propriedade de distância
+                                                if(prop.PropertyTypeCode == 1)
+                                                {
+                                                    prop.Value = Convert.ToDouble(dicBlkAtts[prop.PropertyName]);
+                                                }
+                                                // Propriedade visibilidade
+                                                else if(prop.PropertyTypeCode == 5)
+                                                {
+                                                    prop.Value = dicBlkAtts[prop.PropertyName];
+                                                }
+                                                
+                                            }
+                                        }
                                     }
                                 }
-
-                                // Início: Setar atributos do bloco ***********************************************************
-                                
-
-
-
                                 // Fim: Setar atributos do bloco ************************************************************
 
                                 Entity eBlk = (Entity)tr.GetObject(acBlkRef.Id, OpenMode.ForRead);
