@@ -35,15 +35,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="accoremgd">
-      <HintPath>C:\Autodesk\ObjectARX_2018\inc\accoremgd.dll</HintPath>
+      <HintPath>C:\Autodesk\ObjectARX_2018\inc\AcCoreMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="acdbmgd">
-      <HintPath>C:\Autodesk\ObjectARX_2018\inc\acdbmgd.dll</HintPath>
+      <HintPath>C:\Autodesk\ObjectARX_2018\inc\AcDbMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="acmgd">
-      <HintPath>C:\Autodesk\ObjectARX_2018\inc\acmgd.dll</HintPath>
+      <HintPath>C:\Autodesk\ObjectARX_2018\inc\AcMgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />

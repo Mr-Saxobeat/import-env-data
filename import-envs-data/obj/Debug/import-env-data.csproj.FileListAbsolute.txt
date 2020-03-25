@@ -16,3 +16,10 @@ C:\Users\weiglas.ribeiro\Documents\GitHub\import-env-data\import-envs-data\obj\D
 C:\Users\weiglas.ribeiro\Documents\GitHub\import-env-data\import-envs-data\bin\Debug\start.scr
 C:\Users\weiglas.ribeiro\Documents\GitHub\import-env-data\import-envs-data\bin\Debug\import-envs-data.dll
 C:\Users\weiglas.ribeiro\Documents\GitHub\import-env-data\import-envs-data\bin\Debug\import-envs-data.pdb
+C:\Users\weigl\Documents\git\import-env-data\import-envs-data\bin\Debug\start.scr
+C:\Users\weigl\Documents\git\import-env-data\import-envs-data\bin\Debug\import-envs-data.dll
+C:\Users\weigl\Documents\git\import-env-data\import-envs-data\bin\Debug\import-envs-data.pdb
+C:\Users\weigl\Documents\git\import-env-data\import-envs-data\obj\Debug\import-env-data.csprojAssemblyReference.cache
+C:\Users\weigl\Documents\git\import-env-data\import-envs-data\obj\Debug\import-env-data.csproj.CoreCompileInputs.cache
+C:\Users\weigl\Documents\git\import-env-data\import-envs-data\obj\Debug\import-envs-data.dll
+C:\Users\weigl\Documents\git\import-env-data\import-envs-data\obj\Debug\import-envs-data.pdb
