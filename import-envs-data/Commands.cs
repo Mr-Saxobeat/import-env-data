@@ -131,6 +131,7 @@ namespace AcadPlugin
                                 acCurSpaceBlkTblRec = tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite) as BlockTableRecord;
                                 acCurSpaceBlkTblRec.AppendEntity(acBlkRef);
                                 tr.AddNewlyCreatedDBObject(acBlkRef, true);
+                                acBlkRef.Rotation = Convert.ToDouble(sBlkRot);
 
                                 // Início: Setar atributos do bloco ***********************************************************
                                 blkTblkRec = idBlkTblRec.GetObject(OpenMode.ForWrite) as BlockTableRecord;
