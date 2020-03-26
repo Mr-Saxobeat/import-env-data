@@ -73,7 +73,7 @@ namespace AcadPlugin
                         // baseado no 'ida.csv'
                         sBlkId = Convert.ToString(contId); // O id não é declarado no 'ida.csv' pois este arquivo vem do matlab.
                         sBlkName = sFileLine[0];
-                        dbBlkRot = (Math.PI / 180) * Convert.ToDouble(sFileLine[1]);
+                        dbBlkRot = (Math.PI / 180) * Convert.ToDouble(sFileLine[1]); // Converte graus para radiano
                         // Aqui é usado um Point3d pois é requisitado para criar um 'BlockReference' e não um Point2d.
                         ptBlkOrigin = new Point3d(Convert.ToDouble(sFileLine[2]), Convert.ToDouble(sFileLine[3]), 0);
                         sLayer = sFileLine[4];
@@ -129,6 +129,7 @@ namespace AcadPlugin
 
                             using (var trColor = db.TransactionManager.StartOpenCloseTransaction())
                             {
+                                // Altera a cor para "ByBlock"
                                 foreach (ObjectId oId in blkTblRec)
                                 {
                                     Entity ent = (Entity)trColor.GetObject(oId, OpenMode.ForWrite);
@@ -264,6 +265,7 @@ namespace AcadPlugin
             // ***************************************************************************************************************************
 
             string[] sLine;
+            List<string> lLine = new List<string>();
             
             using (var tr = db.TransactionManager.StartTransaction())
             {
@@ -275,16 +277,28 @@ namespace AcadPlugin
                 Point3d ptAux;
                 Point2d ptVert;
                 int indexVert;
+                int lineColor = -1;
 
                 while (!fileData.EndOfStream)
                 {
                     sLine = fileData.ReadLine().Split(';');
                     indexVert = 0;
 
-                    using(Polyline oPLine = new Polyline())
+                    foreach(string value in sLine)
+                    {
+                        if(value != "")
+                        {
+                            lLine.Add(value);
+                        }
+                    }
+
+                    lineColor = Convert.ToInt32(lLine.Last());
+                    lLine.RemoveAt(lLine.Count - 1);
+
+                    using (Polyline oPLine = new Polyline())
                     {
                         // address pode ser um index ou um ponto
-                        foreach(string address in sLine)
+                        foreach(string address in lLine)
                         {
                             if(address != "")
                             {
@@ -304,14 +318,15 @@ namespace AcadPlugin
                                     ptVert = new Point2d(ptAux.X, ptAux.Y);
                                 }
 
-                                //oPLine.SetPointAt(indexPoint, ptVert);
                                 oPLine.AddVertexAt(indexVert, ptVert, 0, 0, 0);
                                 indexVert++;
                             }
                         }
+                        oPLine.ColorIndex = lineColor;
                         BlkTblRec.AppendEntity(oPLine);
                         tr.AddNewlyCreatedDBObject(oPLine, true);
                     }
+                    lLine.Clear();
                 }
                 tr.Commit();
             }
