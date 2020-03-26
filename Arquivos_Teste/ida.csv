@@ -1,7 +1,7 @@
-luz;90;5.01;14.06;TAG1::weiglas//TAG2::baixo1//VISIBILIDADE::vis1;
-luz;0;9.47;13.98;TAG1::soriano//TAG2::baixo2//VISIBILIDADE::vis2//Distance1::1;
-luz;90;9.47;11.405;TAG1::ribeiro//TAG2::baixo3//VISIBILIDADE::vis1;
-luz;180;5.01;12.315;TAG1::luiz//TAG2::baixo4//VISIBILIDADE::vis2//Distance1::2;
-luz;270;7.09;13.11;TAG1::gONZAGA//TAG2::baixo5//VISIBILIDADE::vis1;
-luz;45;4.66;15.605;TAG1::dominguinhos//TAG2::baixo6//VISIBILIDADE::vis2//Distance1::3;
-luz;90;2.79;12.31;TAG1::mestrinho//TAG2::baixo7//VISIBILIDADE::vis1;
+luz;90;5.01;14.06;LANG-GR-VER DETALHE;9;TAG1::weiglas//TAG2::baixo1//VISIBILIDADE::vis1;
+luz;0;9.47;13.98;LANG-GR-VER DETALHE;3;TAG1::soriano//TAG2::baixo2//VISIBILIDADE::vis2//Distance1::1;
+luz;90;9.47;11.405;LANG-GR-VER DETALHE;4;TAG1::ribeiro//TAG2::baixo3//VISIBILIDADE::vis2;
+luz;180;5.01;12.315;LANG-PAREDE;5;TAG1::luiz//TAG2::baixo4//VISIBILIDADE::vis2//Distance1::2;
+luz;270;7.09;13.11;LANG-PAREDE;6;TAG1::gONZAGA//TAG2::baixo5//VISIBILIDADE::vis2;
+luz;45;4.66;15.605;LANG-PAREDE;7;TAG1::dominguinhos//TAG2::baixo6//VISIBILIDADE::vis2//Distance1::3;
+luz;90;2.79;12.31;LANG-PAREDE;8;TAG1::mestrinho//TAG2::baixo7//VISIBILIDADE::vis2;

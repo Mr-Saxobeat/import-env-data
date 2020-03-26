@@ -20,7 +20,7 @@ namespace AcadPlugin
             Document doc = AcAp.DocumentManager.MdiActiveDocument;
             Database db = doc.Database;
             Editor ed = doc.Editor;
-
+            
             // Local do arquivo de dados: O diretório do .dwg onde está sendo 
             // executado o programa.
             string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
@@ -41,9 +41,11 @@ namespace AcadPlugin
             string sBlkId;
             string sBlkName;
             Point3d ptBlkOrigin;
-            string sBlkRot;
+            double dbBlkRot;
+            string sLayer;
+            string sColor;
             ObjectId idBlkTblRec = ObjectId.Null;
-            BlockTableRecord blkTblkRec = null;
+            BlockTableRecord blkTblRec = null;
             string[] sBlkAtts;
             string[] oneAtt;
             string blkTag;
@@ -71,10 +73,12 @@ namespace AcadPlugin
                         // baseado no 'ida.csv'
                         sBlkId = Convert.ToString(contId); // O id não é declarado no 'ida.csv' pois este arquivo vem do matlab.
                         sBlkName = sFileLine[0];
-                        sBlkRot = sFileLine[1];
+                        dbBlkRot = (Math.PI / 180) * Convert.ToDouble(sFileLine[1]);
                         // Aqui é usado um Point3d pois é requisitado para criar um 'BlockReference' e não um Point2d.
                         ptBlkOrigin = new Point3d(Convert.ToDouble(sFileLine[2]), Convert.ToDouble(sFileLine[3]), 0);
-                        sBlkAtts = sFileLine[4].Split(new string[] { "//" }, StringSplitOptions.None);
+                        sLayer = sFileLine[4];
+                        sColor = sFileLine[5];
+                        sBlkAtts = sFileLine[6].Split(new string[] { "//" }, StringSplitOptions.None);
 
                         foreach(var sBlkAtt in sBlkAtts)
                         {
@@ -121,6 +125,17 @@ namespace AcadPlugin
 
                         if (idBlkTblRec != ObjectId.Null)
                         {
+                            blkTblRec = idBlkTblRec.GetObject(OpenMode.ForWrite) as BlockTableRecord;
+
+                            using (var trColor = db.TransactionManager.StartOpenCloseTransaction())
+                            {
+                                foreach (ObjectId oId in blkTblRec)
+                                {
+                                    Entity ent = (Entity)trColor.GetObject(oId, OpenMode.ForWrite);
+                                    ent.ColorIndex = 0;
+                                }
+                                trColor.Commit();
+                            }
 
                             // Aqui o bloco será adicionado ao desenho e serão gravados 
                             // seu id (identificação dada pelo programa atual, começando em 0 e incrementado 1 a 1)
@@ -131,14 +146,15 @@ namespace AcadPlugin
                                 acCurSpaceBlkTblRec = tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite) as BlockTableRecord;
                                 acCurSpaceBlkTblRec.AppendEntity(acBlkRef);
                                 tr.AddNewlyCreatedDBObject(acBlkRef, true);
-                                acBlkRef.Rotation = Convert.ToDouble(sBlkRot);
+                                acBlkRef.Rotation = dbBlkRot;
+                                acBlkRef.Layer = sLayer;
+                                acBlkRef.ColorIndex = Convert.ToInt32(sColor);
 
                                 // Início: Setar atributos do bloco ***********************************************************
-                                blkTblkRec = idBlkTblRec.GetObject(OpenMode.ForWrite) as BlockTableRecord;
-                                if (blkTblkRec.HasAttributeDefinitions)
+                                if (blkTblRec.HasAttributeDefinitions)
                                 {
                                     RXClass rxClass = RXClass.GetClass(typeof(AttributeDefinition));
-                                    foreach (ObjectId idAttDef in blkTblkRec)
+                                    foreach (ObjectId idAttDef in blkTblRec)
                                     {
                                         if(idAttDef.ObjectClass == rxClass)
                                         {
