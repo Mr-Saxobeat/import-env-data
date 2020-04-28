@@ -89,15 +89,6 @@ namespace AcadPlugin
                             dicBlkAtts.Add(blkTag, blkValue);
                         }
 
-
-                        // ******************************************************************************************************************************************
-                        // ******************************************************************************************************************************************
-                        // Falta pegar os valores dos atributos dos blocos (que é o último argumento dado no 'ida.csv').
-                        // ******************************************************************************************************************************************
-                        // ******************************************************************************************************************************************
-
-
-
                         // Se o bloco não existe no desenho atual
                         if (!acBlkTbl.Has(sBlkName))
                         {
@@ -392,13 +383,41 @@ namespace AcadPlugin
                         // Fim: checa se o id do bloco confere com o handle registrado no MS ******************************************************
 
                         string blkName = blkRef.Name;
-                        double blkRot = blkRef.Rotation;
+
+                        // Se é bloco dinamico, a forma de pegar o nome do bloco
+                        // é desse jeito:
+                        BlockTableRecord realBlock = null;
+                        string atts = "";
+                        if (blkRef.IsDynamicBlock)
+                        {
+                            realBlock = (BlockTableRecord)tr.GetObject(blkRef.DynamicBlockTableRecord, OpenMode.ForRead);
+                            blkName = realBlock.Name;
+
+                            // Le os atributos do bloco
+                            if (realBlock.HasAttributeDefinitions)
+                            {
+                                var blkRefAtts = (AttributeCollection)blkRef.AttributeCollection;
+                                RXClass rxClass = RXClass.GetClass(typeof(AttributeReference));
+                                foreach (ObjectId idAttDef in blkRefAtts)
+                                {
+                                    if (idAttDef.ObjectClass == rxClass)
+                                    {
+                                        AttributeReference obj = (AttributeReference)tr.GetObject(idAttDef, OpenMode.ForRead);
+
+                                        atts += obj.Tag + "::" + obj.TextString + "//";
+                                    }
+                                }
+                            }
+                        }
+
+                        double blkRot = blkRef.Rotation * (180/Math.PI);
                         string blkX = blkRef.Position.X.ToString("n2");
                         string blkY = blkRef.Position.Y.ToString("n2");
+                        string blkLayer = blkRef.Layer;
+                        string blkColor = Convert.ToString(blkRef.ColorIndex);
 
-                        // Falta Pegar o valor do atributo (que ainda nem foi setado) ************************************************************
-
-                        fileOut.WriteLine(sBlkId + ";" + blkName + ";" + blkRot + ";" + blkX + ";" + blkY + ";");
+                        fileOut.WriteLine(sBlkId + ";" + blkName + ";" + blkRot + ";" + blkX + ";" + blkY + ";" 
+                            + blkLayer + ";" + blkColor + ";" + atts + ";");
                     }
                 }
 

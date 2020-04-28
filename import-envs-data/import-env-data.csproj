@@ -66,6 +66,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>IF $(ConfigurationName) ==  Release (copy /Y "$(TargetPath)" "Z:\Lisp")</PostBuildEvent>
+    <PostBuildEvent>IF $(ConfigurationName) ==  Release IF Exist "Z:\Lisp" (copy /Y "$(TargetPath)" "Z:\Lisp")</PostBuildEvent>
   </PropertyGroup>
 </Project>
