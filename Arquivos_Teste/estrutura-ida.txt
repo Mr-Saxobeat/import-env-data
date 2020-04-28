@@ -1,0 +1,3 @@
+nome-do-bloco;rotacao;coordenadaX;coordenadaY;layer;cor;atributo1::valor//atributo2::valor;
+
+(visibilidade é um atributo)

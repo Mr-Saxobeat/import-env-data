@@ -1,0 +1,9 @@
+id1;id2;id3; ... ;numero-da-cor;
+x1,y1;id2;x3,y3;id4;id5; ... ;numero-da-cor;
+
+Pode-se misturar ids com coordenadas. 
+Atenção à separação de coordenadas do mesmo ponto, que é por vírgula.
+Enquanto que a separação de coordenadas ou ids de pontos diferentes
+é por ponto e vírgula.
+
+O número da cor deve ser sempre a última propriedade a ser passada.
