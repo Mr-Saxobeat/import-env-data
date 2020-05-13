@@ -450,6 +450,56 @@ namespace AcadPlugin
             return blk;
         }
 
+        [CommandMethod("MoveBlock")]
+        public void MoveBlock()
+        {
+            Document doc = AcAp.DocumentManager.MdiActiveDocument;
+            Database db = doc.Database;
 
+            // LOcal do arquivo de dados: O diretório do .dwg onde está send
+            // executado o programa.
+            string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
+
+            // Cria um StreamReader para ler o arquivo 'moveblocks.txt', que contém 
+            // os dados para mover os blocos.
+            var fileData = new StreamReader(curDwgPath + "\\moveBlocks.txt");
+
+            // Armazenará uma linha que será lida do 'moveBlocks.txt'
+            string[] sFileLine;
+
+            string blockId;
+            string[] coords;
+            string coordX;
+            string coordY;
+            Point3d oldPos;
+            Point3d newPos;
+            Vector3d vector;
+
+            using (var tr = db.TransactionManager.StartTransaction())
+            {
+                while (!fileData.EndOfStream)
+                {
+                    sFileLine = fileData.ReadLine().Split(';');
+                    blockId = sFileLine[0];
+                    coords = sFileLine[1].Split(',');
+                    coordX = coords[0];
+                    coordY = coords[1];
+
+                    DBObject dbModelSpace = tr.GetObject(SymbolUtilityServices.GetBlockModelSpaceId(db), OpenMode.ForWrite);
+                    ObjectId extId = dbModelSpace.ExtensionDictionary;
+                    DBDictionary dbExt = (DBDictionary)tr.GetObject(extId, OpenMode.ForRead);
+
+                    BlockReference blkRef = GetRefBlkFromIndex(db, dbExt, blockId);
+                    BlockReference blkRefWrite = (BlockReference)tr.GetObject(blkRef.Id, OpenMode.ForWrite);
+
+                    oldPos = blkRef.Position;
+                    newPos = new Point3d(Convert.ToDouble(coordX), Convert.ToDouble(coordY), 0);
+                    vector = oldPos.GetVectorTo(newPos);
+
+                    blkRefWrite.TransformBy(Matrix3d.Displacement(vector));
+                }
+                tr.Commit();
+            }
+        }
     }
 }
