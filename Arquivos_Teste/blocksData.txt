@@ -1,0 +1,1 @@
+1;luz;0;10.00;20.00;LANG-GR-VER DETALHE;3;TAG1::soriano//TAG2::baixo2//;

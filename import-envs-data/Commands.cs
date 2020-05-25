@@ -25,19 +25,19 @@ namespace AcadPlugin
             // executado o programa.
             string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
 
-            // Cria um StreamReader para ler o arquivo 'ida.csv', que contém os
+            // Cria um StreamReader para ler o arquivo 'ida.txt', que contém os
             // dados para inserir os blocos.
-            var fileData = new StreamReader(curDwgPath + "\\ida.csv");
+            var fileData = new StreamReader(curDwgPath + "\\ida.txt");
 
             // Diretório dos arquivos '.dwg' dos blocos. Pois, caso o bloco
             // não exista no desenho atual, o programa irá procurar os blocos
             // em arquivos '.dwg' externos.
             String blkPath = curDwgPath;
             
-            // Armazenará uma linha que será lida do 'ida.csv'
+            // Armazenará uma linha que será lida do 'ida.txt'
             string[] sFileLine;
 
-            // Informações dos blocos, que serão lidos do 'ida.csv'
+            // Informações dos blocos, que serão lidos do 'ida.txt'
             string sBlkId;
             string sBlkName;
             Point3d ptBlkOrigin;
@@ -65,13 +65,13 @@ namespace AcadPlugin
                     int contId = 0;
                     while (!fileData.EndOfStream)
                     {
-                        // sFileLine é uma array que lê uma linha do 'ida.csv'
+                        // sFileLine é uma array que lê uma linha do 'ida.txt'
                         // tendo como separador de colunas ';'
                         sFileLine = fileData.ReadLine().Split(';');
 
                         // Atribui os parâmetros de cada bloco que será inserido
-                        // baseado no 'ida.csv'
-                        sBlkId = Convert.ToString(contId); // O id não é declarado no 'ida.csv' pois este arquivo vem do matlab.
+                        // baseado no 'ida.txt'
+                        sBlkId = Convert.ToString(contId); // O id não é declarado no 'ida.txt' pois este arquivo vem do matlab.
                         sBlkName = sFileLine[0];
                         dbBlkRot = (Math.PI / 180) * Convert.ToDouble(sFileLine[1]); // Converte graus para radiano
                         // Aqui é usado um Point3d pois é requisitado para criar um 'BlockReference' e não um Point2d.
@@ -252,7 +252,7 @@ namespace AcadPlugin
             // ***************************************************************************************************************************
             //string curDwgPath = Directory.GetCurrentDirectory();
             string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
-            var fileData = new StreamReader(curDwgPath + "\\let.csv");
+            var fileData = new StreamReader(curDwgPath + "\\let.txt");
             // ***************************************************************************************************************************
 
             string[] sLine;
@@ -325,7 +325,7 @@ namespace AcadPlugin
 
 
         // Comando que lê dados dos blocos selecionados pelo usuário
-        // e exporta um arquivo '.csv' com esses dados.
+        // e exporta um arquivo '.txt' com esses dados.
         [CommandMethod("LEBLOCK")]
         public void ReadBlocksData()
         {
@@ -337,7 +337,7 @@ namespace AcadPlugin
             string curDwgPath = AcAp.GetSystemVariable("DWGPREFIX").ToString();
 
             // Arquivo onde será escrito os dados obtidos.
-            StreamWriter fileOut = new StreamWriter(curDwgPath + "\\blocksData.csv");
+            StreamWriter fileOut = new StreamWriter(curDwgPath + "\\blocksData.txt");
 
             using (var tr = db.TransactionManager.StartTransaction())
             {

@@ -1,3 +1,2 @@
 ﻿open "C:\Users\weigl\Documents\git\import-env-data\Arquivos_Teste\PAVIMENTO.dwg"
 netload "import-envs-data.dll"
-IDA
